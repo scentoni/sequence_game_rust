@@ -4,11 +4,6 @@ use std::env;
 use std::io;
 use rand::Rng;
 
-static ASCII_LOWER: [char; 26] = [
-    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-    'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-];
-
 fn getnumber(max: usize) -> usize {
     let mut input = String::new();
     loop {
@@ -26,23 +21,49 @@ fn getnumber(max: usize) -> usize {
     }
 }
 
-fn print_sequence(sequence: &Vec<usize>) {
-    let sequence_display: Vec<_> = sequence.iter().map(|i| ASCII_LOWER[*i].to_string() ).collect();
-    let labels: Vec<_> = (0..sequence.len()).map(|i| (i).to_string() ).collect();
-    println!("{}", sequence_display.join(" "));
-    println!("{}", labels.join(" "));
+#[derive(Debug)]
+struct Game {
+    length: usize,
+    sequence: Vec<usize>,
 }
 
-fn sorted_length<T: PartialOrd>(sequence: &Vec<T>) -> usize {
-    let mut i = 1;
-    while i < sequence.len() && sequence[i - 1] < sequence[i] {
-        i += 1;
+impl Game {
+    fn new_random(length: usize) -> Game {
+        let mut sequence: Vec<_> = (0..length).collect();
+        let mut rng = rand::thread_rng();
+        rng.shuffle(&mut sequence);
+        Game {
+            length,
+            sequence,
+        }
     }
-    return i;
-}
 
-fn reverse_segment<T>(sequence: &mut Vec<T>, left: usize, right: usize) {
-    sequence[left..(right + 1)].reverse();
+    fn sorted_length<T: PartialOrd>(sequence: &Vec<T>) -> usize {
+        let mut i = 1;
+        while i < sequence.len() && sequence[i - 1] < sequence[i] {
+            i += 1;
+        }
+        return i;
+    }
+
+    fn reverse_segment(&mut self, left: usize, right: usize) {
+        self.sequence[left..(right + 1)].reverse();
+    }
+
+    fn print(&self) {
+        static ASCII_LOWER: [char; 26] = [
+            'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+            'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+        ];
+        let sequence_display: Vec<_> = self.sequence.iter().map(|i| ASCII_LOWER[*i].to_string() ).collect();
+        let labels: Vec<_> = (0..self.length).map(|i| (i).to_string() ).collect();
+        println!("{}", sequence_display.join(" "));
+        println!("{}", labels.join(" "));
+    }
+
+    fn is_sorted(&self) -> bool {
+        return Game::sorted_length(&self.sequence) == self.length;
+    }
 }
 
 fn main() {
@@ -53,20 +74,17 @@ fn main() {
     };
 
     let mut turn = 0;
-    let mut sequence: Vec<_> = (0..length).collect();
-    let mut rng = rand::thread_rng();
-    rng.shuffle(&mut sequence);
-    sequence.reverse();
+    let mut game = Game::new_random(length);
 
-    print_sequence(&sequence);
-    while sorted_length(&sequence) < sequence.len() {
+    game.print();
+    while !game.is_sorted() {
         turn += 1;
         println!("Turn {}", turn);
         let right = getnumber(length as usize);
         let left = 0;
-        reverse_segment(&mut sequence, left, right);
+        game.reverse_segment(left, right);
         println!();
-        print_sequence(&sequence);
+        game.print();
     }
     println!("You won in {} turns!", turn);
 }
