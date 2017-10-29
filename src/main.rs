@@ -4,10 +4,10 @@ use std::env;
 use std::io;
 use rand::Rng;
 
-fn getnumber(max: usize) -> usize {
+fn getnumber(prompt: &str, max: usize) -> usize {
     let mut input = String::new();
     loop {
-        println!("Rotate through: ");
+        println!("{}", prompt);
         io::stdin().read_line(&mut input)
             .expect("Failed to read line");
 
@@ -23,7 +23,6 @@ fn getnumber(max: usize) -> usize {
 
 #[derive(Debug)]
 struct Game {
-    length: usize,
     sequence: Vec<usize>,
 }
 
@@ -33,7 +32,6 @@ impl Game {
         let mut rng = rand::thread_rng();
         rng.shuffle(&mut sequence);
         Game {
-            length,
             sequence,
         }
     }
@@ -56,13 +54,13 @@ impl Game {
             'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
         ];
         let sequence_display: Vec<_> = self.sequence.iter().map(|i| ASCII_LOWER[*i].to_string() ).collect();
-        let labels: Vec<_> = (0..self.length).map(|i| (i).to_string() ).collect();
+        let labels: Vec<_> = (0..self.sequence.len()).map(|i| (i).to_string() ).collect();
         println!("{}", sequence_display.join(" "));
         println!("{}", labels.join(" "));
     }
 
     fn is_sorted(&self) -> bool {
-        return Game::sorted_length(&self.sequence) == self.length;
+        return Game::sorted_length(&self.sequence) >= self.sequence.len();
     }
 }
 
@@ -80,8 +78,8 @@ fn main() {
     while !game.is_sorted() {
         turn += 1;
         println!("Turn {}", turn);
-        let right = getnumber(length as usize);
-        let left = 0;
+        let left = getnumber("Reverse from:", length as usize);
+        let right = getnumber("Reverse through:", length as usize);
         game.reverse_segment(left, right);
         println!();
         game.print();
