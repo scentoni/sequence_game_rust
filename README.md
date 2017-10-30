@@ -5,21 +5,21 @@ An example of play:
 
 ```
 $ sequence_game 5
-b d a c e
+b d c e a
 0 1 2 3 4
 Turn 1
 Reverse from:
-1
-Reverse through:
 3
+Reverse through:
+4
 
-b c a d e
+b d c a e
 0 1 2 3 4
 Turn 2
 Reverse from:
 1
 Reverse through:
-2
+3
 
 b a c d e
 0 1 2 3 4
