@@ -84,5 +84,5 @@ fn main() {
         println!();
         game.print();
     }
-    println!("You won in {} turns!", turn);
+    println!("You solved the puzzle in {} moves!", turn);
 }
