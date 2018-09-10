@@ -88,6 +88,7 @@ fn game(length: usize) {
         writeln!("");
         game.print();
     }
+    ncurses::refresh();
     ncurses::endwin();
     println!("You solved the puzzle in {} moves!", turn);
 }
