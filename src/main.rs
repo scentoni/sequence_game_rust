@@ -1,22 +1,31 @@
+extern crate ncurses;
 extern crate rand;
 
 use std::env;
-use std::io;
 use rand::Rng;
 
-fn getnumber(prompt: &str, max: usize) -> usize {
-    let mut input = String::new();
-    loop {
-        println!("{}", prompt);
-        io::stdin().read_line(&mut input)
-            .expect("Failed to read line");
+macro_rules! writeln {
+    ($fmt:expr) => (write!(concat!($fmt, "\n")));
+    ($fmt:expr, $($arg:tt)*) => (write!(concat!($fmt, "\n"), $($arg)*));
+}
 
-        let num: usize = match input.trim().parse() {
-            Ok(num) => num,
-            Err(_) => continue,
-        };
-        if num <= max {
-            return num
+macro_rules! write {
+    ($fmt:expr) => (ncurses::printw($fmt); ncurses::refresh(););
+    ($fmt:expr, $($arg:tt)*) => (ncurses::printw(&format!($fmt, $($arg)*)); ncurses::refresh(););
+}
+
+fn getnumber(prompt: &str, max: usize) -> usize {
+    write!("{}", prompt);
+    loop {
+        let ch1 = ncurses::getch();
+        let ch2 = std::char::from_u32(ch1 as u32);
+        if let Some(c) = ch2 {
+            if let Some(nu32) = c.to_digit(10) {
+                let n = nu32 as usize;
+                if n <= max {
+                    return n
+                }
+            }
         }
     }
 }
@@ -55,8 +64,8 @@ impl Game {
         ];
         let sequence_display: Vec<_> = self.sequence.iter().map(|i| ASCII_LOWER[*i].to_string() ).collect();
         let labels: Vec<_> = (0..self.sequence.len()).map(|i| (i).to_string() ).collect();
-        println!("{}", sequence_display.join(" "));
-        println!("{}", labels.join(" "));
+        writeln!("{}", sequence_display.join(" "));
+        writeln!("{}", labels.join(" "));
     }
 
     fn is_sorted(&self) -> bool {
@@ -64,25 +73,50 @@ impl Game {
     }
 }
 
-fn main() {
-    let args: Vec<String> = env::args().collect();
-    let length: usize = match args[1].trim().parse() {
-        Ok(num) => num,
-        Err(_) => 5,
-    };
-
+fn game(length: usize) {
     let mut turn = 0;
+    ncurses::initscr();
     let mut game = Game::new_random(length);
-
     game.print();
     while !game.is_sorted() {
         turn += 1;
-        println!("Turn {}", turn);
+        writeln!("Turn {}", turn);
         let left = getnumber("Reverse from:", length as usize);
+        writeln!("");
         let right = getnumber("Reverse through:", length as usize);
         game.reverse_segment(left, right);
-        println!();
+        writeln!("");
         game.print();
     }
+    ncurses::endwin();
     println!("You solved the puzzle in {} moves!", turn);
+}
+
+fn print_usage(program: &str) {
+    println!("Usage: {} <length>", program);
+}
+
+fn main() {
+    let args: Vec<String> = env::args().collect();
+    let program = args[0].clone();
+
+    if args.len() != 2 {
+        println!("{} is the wrong number of arguments", args.len() - 1);
+        print_usage(&program);
+    } else {
+        match args[1].trim().parse() {
+            Ok(len) => {
+                if 1 <= len && len <= 10 {
+                    game(len);
+                } else {
+                    println!("{} is not in the range [1..10]", len);
+                    print_usage(&program);
+                }
+            },
+            Err(_) => {
+                println!("Could not interpret \"{}\" as an integer", args[1]);
+                print_usage(&program);
+            },
+        };
+    };
 }

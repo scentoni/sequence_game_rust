@@ -5,3 +5,6 @@ authors = ["Scott Centoni <scentoni@hotmail.com>"]
 
 [dependencies]
 rand = "*"
+ncurses = "*"
+# ncurses = "5.94.0"
+
